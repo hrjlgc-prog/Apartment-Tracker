@@ -305,7 +305,7 @@ const App = () => {
               className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none w-48"/>
           </div>
           <button onClick={() => setIsArchiveConfirmOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-bold hover:bg-slate-900 transition-all shadow-md">
-            <Archive size={16}/> Archive & New Turn
+            <Archive size={16}/> Archive
           </button>
         </div>
       </header>
