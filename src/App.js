@@ -40,21 +40,9 @@ const FirebaseProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (!auth) return;
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUserId(user.uid);
-      } else {
-        try {
-          await signInAnonymously(auth);
-        } catch {
-          setUserId(crypto.randomUUID());
-        }
-      }
-      setIsAuthReady(true);
-    });
-    return unsub;
-  }, [auth]);
+    setUserId('jlgc-shared-user');
+    setIsAuthReady(true);
+  }, []);
 
   return (
     <FirebaseContext.Provider value={{ db, userId, isAuthReady }}>
