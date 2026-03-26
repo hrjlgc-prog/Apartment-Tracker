@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, createContext, useContext, useRef } from 'react';
+  import React, { useState, useEffect, useCallback, createContext, useContext, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, collection, query, onSnapshot, updateDoc, writeBatch, getDocs, orderBy, enableIndexedDbPersistence } from 'firebase/firestore';
-import { Home, List, Loader2, Check, ArrowUp, Archive, ChevronDown, ChevronUp, Search, History, LayoutDashboard, ArrowRight, Printer } from 'lucide-react';
+import { Home, List, Loader2, Check, ArrowUp, Archive, ChevronDown, ChevronUp, Search, History, LayoutDashboard, ArrowRight, Printer, Clock } from 'lucide-react';
 
 // ── Firebase Config ──────────────────────────────────────────────────────────
 const firebaseConfig = {
@@ -22,7 +22,6 @@ const FirebaseContext = createContext(null);
 
 const FirebaseProvider = ({ children }) => {
   const [db, setDb] = useState(null);
-  const [auth, setAuth] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
@@ -30,16 +29,12 @@ const FirebaseProvider = ({ children }) => {
     try {
       const app = initializeApp(firebaseConfig);
       const dbInstance = getFirestore(app);
-      const authInstance = getAuth(app);
       setDb(dbInstance);
-      setAuth(authInstance);
       enableIndexedDbPersistence(dbInstance).catch(err => console.error('Persistence error:', err));
     } catch (e) {
       console.error('Firebase init error:', e);
     }
-  }, []);
-
-  useEffect(() => {
+    // Shared fixed user — same data across all devices
     setUserId('jlgc-shared-user');
     setIsAuthReady(true);
   }, []);
@@ -66,31 +61,31 @@ const STATUS_OPTIONS = [
 ];
 
 const SECTION_THEMES = {
-  EntryWayStairs:    { bg: 'bg-slate-50',   border: 'border-slate-200',   icon: 'text-slate-600',   accent: 'bg-slate-600'   },
-  EntryWayClosets:   { bg: 'bg-slate-50',   border: 'border-slate-200',   icon: 'text-slate-600',   accent: 'bg-slate-600'   },
-  LivingRoom:        { bg: 'bg-sky-50',     border: 'border-sky-200',     icon: 'text-sky-600',     accent: 'bg-sky-600'     },
-  Kitchen:           { bg: 'bg-orange-50',  border: 'border-orange-200',  icon: 'text-orange-600',  accent: 'bg-orange-600'  },
-  Appliances:        { bg: 'bg-amber-50',   border: 'border-amber-200',   icon: 'text-amber-600',   accent: 'bg-amber-600'   },
-  Hallways:          { bg: 'bg-zinc-50',    border: 'border-zinc-200',    icon: 'text-zinc-600',    accent: 'bg-zinc-600'    },
-  Bedroom:           { bg: 'bg-purple-50',  border: 'border-purple-200',  icon: 'text-purple-600',  accent: 'bg-purple-600'  },
-  Bathroom:          { bg: 'bg-blue-50',    border: 'border-blue-200',    icon: 'text-blue-600',    accent: 'bg-blue-600'    },
-  Balcony:           { bg: 'bg-emerald-50', border: 'border-emerald-200', icon: 'text-emerald-600', accent: 'bg-emerald-600' },
-  BalconyPatioGarage:{ bg: 'bg-emerald-50', border: 'border-emerald-200', icon: 'text-emerald-600', accent: 'bg-emerald-600' },
-  Notes:             { bg: 'bg-rose-50',    border: 'border-rose-200',    icon: 'text-rose-600',    accent: 'bg-rose-600'    },
+  EntryWayStairs:     { bg: 'bg-slate-50',   border: 'border-slate-200',   icon: 'text-slate-600',   accent: 'bg-slate-600'   },
+  EntryWayClosets:    { bg: 'bg-slate-50',   border: 'border-slate-200',   icon: 'text-slate-600',   accent: 'bg-slate-600'   },
+  LivingRoom:         { bg: 'bg-sky-50',     border: 'border-sky-200',     icon: 'text-sky-600',     accent: 'bg-sky-600'     },
+  Kitchen:            { bg: 'bg-orange-50',  border: 'border-orange-200',  icon: 'text-orange-600',  accent: 'bg-orange-600'  },
+  Appliances:         { bg: 'bg-amber-50',   border: 'border-amber-200',   icon: 'text-amber-600',   accent: 'bg-amber-600'   },
+  Hallways:           { bg: 'bg-zinc-50',    border: 'border-zinc-200',    icon: 'text-zinc-600',    accent: 'bg-zinc-600'    },
+  Bedroom:            { bg: 'bg-purple-50',  border: 'border-purple-200',  icon: 'text-purple-600',  accent: 'bg-purple-600'  },
+  Bathroom:           { bg: 'bg-blue-50',    border: 'border-blue-200',    icon: 'text-blue-600',    accent: 'bg-blue-600'    },
+  Balcony:            { bg: 'bg-emerald-50', border: 'border-emerald-200', icon: 'text-emerald-600', accent: 'bg-emerald-600' },
+  BalconyPatioGarage: { bg: 'bg-emerald-50', border: 'border-emerald-200', icon: 'text-emerald-600', accent: 'bg-emerald-600' },
+  Notes:              { bg: 'bg-rose-50',    border: 'border-rose-200',    icon: 'text-rose-600',    accent: 'bg-rose-600'    },
 };
 
 const defaultRoomItems = {
-  LivingRoom:        ['Floor', 'Walls', 'Ceiling', 'Windows', 'Blinds', 'Light Fixtures', 'Outlets/Switches', 'Vents'],
-  Bedroom:           ['Floor', 'Walls', 'Ceiling', 'Windows', 'Blinds', 'Light Fixtures', 'Outlets/Switches', 'Doors', 'Closet', 'Vents'],
-  Kitchen:           ['Countertops', 'Cabinets', 'Sink', 'Faucet', 'Floor', 'Light Fixtures', 'Garbage Disposal', 'Exhaust Fan', 'Drawers'],
-  Bathroom:          ['Sink', 'Faucet', 'Toilet', 'Shower/Tub', 'Mirror', 'Ceiling', 'Doors', 'Cabinets', 'Caulking', 'Towel Rack', 'Window', 'Floor', 'Walls', 'Grout/Tile', 'Vent fan'],
-  Balcony:           ['Railing', 'Floor'],
-  BalconyPatioGarage:['Railing', 'Patio Floor', 'Garage Door', 'Garage Floor', 'Garage Outlets'],
-  Hallways:          ['Floor', 'Walls', 'Light Fixtures', 'Closets'],
-  EntryWayStairs:    ['Floors', 'Walls', 'Windows', 'Carpet/Tile', 'Smoke/Carbon Monoxide Detectors', 'Thermostat', 'Closets'],
-  EntryWayClosets:   ['Floors', 'Walls', 'Windows', 'Carpet/Tile', 'Smoke/Carbon Monoxide Detectors', 'Thermostat', 'Closets'],
-  Appliances:        ['Refrigerator', 'Stove/Oven', 'Microwave', 'Dishwasher', 'Washing Machine', 'Dryer'],
-  Notes:             ['General Notes'],
+  LivingRoom:         ['Floor', 'Walls', 'Ceiling', 'Windows', 'Blinds', 'Light Fixtures', 'Outlets/Switches', 'Vents'],
+  Bedroom:            ['Floor', 'Walls', 'Ceiling', 'Windows', 'Blinds', 'Light Fixtures', 'Outlets/Switches', 'Doors', 'Closet', 'Vents'],
+  Kitchen:            ['Countertops', 'Cabinets', 'Sink', 'Faucet', 'Floor', 'Light Fixtures', 'Garbage Disposal', 'Exhaust Fan', 'Drawers'],
+  Bathroom:           ['Sink', 'Faucet', 'Toilet', 'Shower/Tub', 'Mirror', 'Ceiling', 'Doors', 'Cabinets', 'Caulking', 'Towel Rack', 'Window', 'Floor', 'Walls', 'Grout/Tile', 'Vent fan'],
+  Balcony:            ['Railing', 'Floor'],
+  BalconyPatioGarage: ['Railing', 'Patio Floor', 'Garage Door', 'Garage Floor', 'Garage Outlets'],
+  Hallways:           ['Floor', 'Walls', 'Light Fixtures', 'Closets'],
+  EntryWayStairs:     ['Floors', 'Walls', 'Windows', 'Carpet/Tile', 'Smoke/Carbon Monoxide Detectors', 'Thermostat', 'Closets'],
+  EntryWayClosets:    ['Floors', 'Walls', 'Windows', 'Carpet/Tile', 'Smoke/Carbon Monoxide Detectors', 'Thermostat', 'Closets'],
+  Appliances:         ['Refrigerator', 'Stove/Oven', 'Microwave', 'Dishwasher', 'Washing Machine', 'Dryer'],
+  Notes:              ['General Notes'],
 };
 
 const createChecklistItem = name => ({ name, moveInStatus: '', midSeasonStatus: '', moveOutStatus: '' });
@@ -121,10 +116,10 @@ const generateDefaultRooms = groupType => {
   return configs.map(c => ({ name: c.name, type: c.type, items: (defaultRoomItems[c.type] || []).map(createChecklistItem) }));
 };
 
-const APT_ORDER = { 'F-204': 0, 'F-801': 1, 'F-807': 2, 'F-1504': 3, 'F-1510': 4, 'F-1607': 5, 'F-1712': 6, 'F-1810': 7, 'S 6-204': 8, 'S 7-104': 9, 'S 16-104': 10, 'S 16-105': 11, 'S 16-108': 12, 'S 16-201': 13, 'S 16-204': 14, 'S 16-208': 15 };
+const APT_ORDER = { 'F-204':0,'F-801':1,'F-807':2,'F-1504':3,'F-1510':4,'F-1607':5,'F-1712':6,'F-1810':7,'S 6-204':8,'S 7-104':9,'S 16-104':10,'S 16-105':11,'S 16-108':12,'S 16-201':13,'S 16-204':14,'S 16-208':15 };
 
 const getAptIdFromNumber = num => {
-  const map = { 1:'F-204',2:'F-801',3:'F-807',4:'F-1504',5:'F-1510',6:'F-1607',7:'F-1712',8:'F-1810',9:'S 6-204',10:'S 7-104',11:'S 16-104',12:'S 16-105',13:'S 16-108',14:'S 16-201',15:'S 16-204',16:'S 16-208' };
+  const map = {1:'F-204',2:'F-801',3:'F-807',4:'F-1504',5:'F-1510',6:'F-1607',7:'F-1712',8:'F-1810',9:'S 6-204',10:'S 7-104',11:'S 16-104',12:'S 16-105',13:'S 16-108',14:'S 16-201',15:'S 16-204',16:'S 16-208'};
   return map[num] || `Apt ${num}`;
 };
 
@@ -162,7 +157,6 @@ const App = () => {
 
   const roomRefs = useRef({});
 
-  // Scroll-to-top button
   useEffect(() => {
     const handler = () => setShowBackToTop(window.scrollY > 200);
     window.addEventListener('scroll', handler);
@@ -171,7 +165,7 @@ const App = () => {
 
   const toggleGroup = group => setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }));
 
-  // ── Bootstrap apartments from Firestore ──────────────────────────────────
+  // ── Bootstrap apartments ─────────────────────────────────────────────────
   useEffect(() => {
     if (!db || !isAuthReady || !userId) return;
     const colRef = collection(db, 'artifacts', APP_ID, 'users', userId, 'apartments');
@@ -183,7 +177,6 @@ const App = () => {
         setLoading(false);
         if (sorted.length > 0 && currentChecklistData === null) handleApartmentSelect(sorted[0].apartmentId);
       } else {
-        // First run — seed all 16 apartments
         const batch = writeBatch(db);
         for (let i = 1; i <= APARTMENT_COUNT; i++) {
           const aptId = getAptIdFromNumber(i);
@@ -217,7 +210,14 @@ const App = () => {
     setLoading(false);
   }, [db, userId, apartments]);
 
-  // ── Update a checklist item ──────────────────────────────────────────────
+  // ── Switch history version ───────────────────────────────────────────────
+  const handleVersionChange = versionId => {
+    const apt = apartments[selectedApartmentIndex];
+    const selectedVer = apt?.allChecklistVersions?.find(v => v.id === versionId);
+    if (selectedVer) { setSelectedChecklistVersionId(versionId); setCurrentChecklistData(selectedVer.rooms); }
+  };
+
+  // ── Update checklist item ────────────────────────────────────────────────
   const updateItemStatus = useCallback(async (aptId, roomName, itemName, field, value) => {
     if (!selectedChecklistVersionId || !db || !userId) return;
     const clRef = doc(db, 'artifacts', APP_ID, 'users', userId, 'apartments', aptId, 'checklists', selectedChecklistVersionId);
@@ -234,7 +234,7 @@ const App = () => {
     } catch (e) { console.error('Save error:', e); }
   }, [db, userId, selectedChecklistVersionId, currentChecklistData]);
 
-  // ── Archive current & create fresh ──────────────────────────────────────
+  // ── Archive & create fresh ───────────────────────────────────────────────
   const handleArchiveAndNew = async () => {
     if (!db || !userId) return;
     setIsArchiveConfirmOpen(false);
@@ -261,7 +261,6 @@ const App = () => {
   const currentVersion = currentApt?.allChecklistVersions?.find(v => v.id === selectedChecklistVersionId);
   const isArchived = currentVersion ? currentVersion.archivedAt !== null : false;
 
-  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-900 pb-20 print:bg-white print:pb-0">
       <style>{`
@@ -346,23 +345,41 @@ const App = () => {
         {/* ── Checklist ── */}
         {currentChecklistData ? (
           <div className="animate-in fade-in duration-500">
-            {/* Unit header bar */}
             <div className="flex flex-col md:flex-row justify-between items-baseline gap-4 mb-8 bg-white p-8 rounded-[2rem] border shadow-sm print:hidden">
               <div className="flex-1">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-5xl font-black text-gray-900 tracking-tight">{currentApt?.apartmentId}</h2>
                   {isArchived && <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black uppercase rounded-full border border-amber-200">Archived Record</span>}
                 </div>
-                <p className="text-gray-400 mt-2 font-bold text-sm flex items-center gap-2">
-                  <History size={16} className="text-indigo-400"/>
-                  {isArchived && currentVersion?.archivedAt ? `Turn closed ${new Date(currentVersion.archivedAt).toLocaleDateString()}` : 'Active Turn Record'}
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 mt-4">
+                  <p className="text-gray-400 font-bold text-sm flex items-center gap-2">
+                    <History size={16} className="text-indigo-400"/>
+                    {isArchived && currentVersion?.archivedAt ? `Record closed on ${new Date(currentVersion.archivedAt).toLocaleDateString()}` : 'Current Inspection'}
+                  </p>
+                  {/* History version selector */}
+                  {currentApt?.allChecklistVersions?.length > 1 && (
+                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                      <Clock size={14} className="text-slate-400"/>
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">History</span>
+                      <select
+                        className="bg-transparent text-[11px] font-bold text-slate-800 outline-none cursor-pointer"
+                        value={selectedChecklistVersionId || ''}
+                        onChange={e => handleVersionChange(e.target.value)}
+                      >
+                        {currentApt.allChecklistVersions.map((v, idx) => (
+                          <option key={v.id} value={v.id}>
+                            {idx === 0 ? 'Current' : `Archived: ${new Date(v.timestamp).toLocaleDateString()}`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 <button onClick={() => window.print()} className="flex items-center gap-2 px-5 py-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-2xl text-xs font-black transition-all border border-indigo-100">
                   <Printer size={16}/> Export PDF / Print
                 </button>
-                {/* Quick Jump dropdown */}
                 <div className="relative group/jump flex-1 md:flex-none">
                   <div className="flex items-center bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 hover:border-indigo-300 transition-colors cursor-pointer min-w-[180px]">
                     <ArrowRight className="text-indigo-500 mr-3" size={18}/>
@@ -393,7 +410,7 @@ const App = () => {
                 const theme = getRoomTheme(room.type);
                 return (
                   <section key={rIdx} ref={el => roomRefs.current[room.name] = el}
-                    className={`rounded-[2.5rem] border ${theme.border} shadow-sm overflow-hidden ${theme.bg} print:print-section print:rounded-lg`}>
+                    className={`rounded-[2.5rem] border ${theme.border} shadow-sm overflow-hidden transition-all hover:shadow-lg ${theme.bg} print:print-section print:rounded-lg`}>
                     <div className="px-10 py-6 border-b border-inherit flex items-center justify-between print:px-4 print:py-2">
                       <div className="flex items-center gap-5">
                         <div className={`bg-white p-3.5 rounded-[1.25rem] border ${theme.border} ${theme.icon} print:hidden`}><Home size={24}/></div>
@@ -405,7 +422,8 @@ const App = () => {
                       {room.name === 'Notes' ? (
                         <div className="bg-white rounded-[2rem] p-8 border border-rose-200 print:rounded-lg print:p-4">
                           <textarea
-                            className="w-full h-56 bg-transparent outline-none text-gray-700 font-bold leading-relaxed resize-none text-lg no-print"
+                            disabled={isArchived}
+                            className={`w-full h-56 bg-transparent outline-none text-gray-700 font-bold leading-relaxed resize-none text-lg no-print ${isArchived ? 'cursor-not-allowed' : ''}`}
                             placeholder="Record master inspection notes, damage observations, tenant communications..."
                             defaultValue={room.items[0]?.moveInStatus}
                             onBlur={e => updateItemStatus(currentApt.apartmentId, room.name, 'General Notes', 'moveInStatus', e.target.value)}
@@ -414,7 +432,6 @@ const App = () => {
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 gap-4 print:gap-1">
-                          {/* Print table header */}
                           <div className="hidden print:print-grid print:mb-1 print:px-2">
                             <div className="print-label">Item</div>
                             <div className="print-label text-center">Move-In</div>
@@ -427,20 +444,18 @@ const App = () => {
                                 <div className={`w-3 h-3 rounded-full ${theme.accent} opacity-20 print:hidden`}></div>
                                 <span className="font-black text-gray-700 text-sm print:text-xs">{item.name}</span>
                               </div>
-                              {/* UI selectors */}
                               <div className="grid grid-cols-3 gap-4 w-full xl:w-auto min-w-[420px] no-print">
                                 {[['moveInStatus','MOVE-IN'],['midSeasonStatus','INSPECTION'],['moveOutStatus','MOVE-OUT']].map(([field, label]) => (
                                   <div key={field}>
                                     <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">{label}</div>
                                     <select disabled={isArchived} value={item[field] || ''}
                                       onChange={e => updateItemStatus(currentApt.apartmentId, room.name, item.name, field, e.target.value)}
-                                      className={`w-full text-[11px] font-black py-3 px-4 border rounded-xl outline-none transition-all bg-gray-50 ${isArchived ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+                                      className={`w-full text-[11px] font-black py-3 px-4 border rounded-xl outline-none transition-all bg-gray-50 ${isArchived ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:border-indigo-300'}`}>
                                       {STATUS_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.description}</option>)}
                                     </select>
                                   </div>
                                 ))}
                               </div>
-                              {/* Print values */}
                               <div className="hidden print:contents">
                                 <div className="print-value">{item.moveInStatus || 'OK'}</div>
                                 <div className="print-value">{item.midSeasonStatus || 'OK'}</div>
@@ -472,7 +487,6 @@ const App = () => {
         </div>
       </div>
 
-      {/* Save toast */}
       {showSaveSuccess && (
         <div className="fixed bottom-12 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-10 py-5 rounded-[2rem] shadow-2xl flex items-center gap-5 z-[100] border border-white/10 no-print">
           <Check size={16} strokeWidth={4} className="text-emerald-500"/>
@@ -480,7 +494,6 @@ const App = () => {
         </div>
       )}
 
-      {/* Confirmation modal */}
       <ConfirmationModal
         isOpen={isArchiveConfirmOpen}
         message="This will archive the current Turn history and reset the checklist for a new inspection. Are you sure?"
@@ -488,7 +501,6 @@ const App = () => {
         onCancel={() => setIsArchiveConfirmOpen(false)}
       />
 
-      {/* Back to top */}
       {showBackToTop && (
         <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="fixed bottom-10 right-10 p-6 bg-indigo-600 text-white rounded-[1.5rem] shadow-2xl hover:scale-110 active:scale-95 transition-all z-50 border-4 border-white no-print">
